@@ -14,6 +14,8 @@ dist-ssr
 .env
 dev.db
 dev.db-journal
+generated/prisma
+generated/prisma/*.tmp*
 
 # Editor directories and files
 .vscode/*
