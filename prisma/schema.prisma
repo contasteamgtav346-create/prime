@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String       @id @default(uuid())
+  username     String       @unique
+  email        String       @unique
+  passwordHash String
+  discordId    String?      @unique
+  avatarUrl    String?
+  role         Role         @default(USER)
+  sessions     Session[]
+  agendaEvents AgendaEvent[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AgendaEvent {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  startAt     DateTime
+  endAt       DateTime?
+  borderColor String?
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdByUserId String?
+  createdByUser   User?    @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([startAt])
+  @@index([published])
+}
+
+model TournamentState {
+  id          String   @id
+  groupsJson  String
+  bracketJson String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteMetric {
+  id                String   @id
+  championshipsCount Int
+  clansCount        Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model UpdatePost {
+  id          String   @id @default(uuid())
+  versionLabel String
+  bannerImage String?
+  publishedAt DateTime
+  changesCount Int      @default(1)
+  changesJson String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([publishedAt])
+}
