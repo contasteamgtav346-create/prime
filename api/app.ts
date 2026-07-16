@@ -31,8 +31,25 @@ const __dirname = path.dirname(__filename)
 dotenv.config()
 
 const app: express.Application = express()
+
+function normalizeOrigin(value: string | undefined): string {
+  const raw = (value ?? '').trim().replace(/[`"' ]/g, '')
+  if (!raw) return ''
+
+  try {
+    return new URL(raw).origin
+  } catch {
+    return ''
+  }
+}
+
 const allowedOrigins = new Set(
-  ['http://localhost:5173', process.env.FRONTEND_URL?.trim()].filter((value): value is string => Boolean(value)),
+  [
+    'http://localhost:5173',
+    'https://primecompetiive.netlify.app',
+    'https://primecompetitive.netlify.app',
+    normalizeOrigin(process.env.FRONTEND_URL),
+  ].filter((value): value is string => Boolean(value)),
 )
 
 app.set('trust proxy', 1)

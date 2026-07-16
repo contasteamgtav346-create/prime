@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { randomToken, sha256Base64Url } from '../lib/crypto.js'
-import { clearSessionCookie, setSessionCookie } from '../lib/cookies.js'
+import { clearSessionCookie, getDefaultCookieOptions, setSessionCookie } from '../lib/cookies.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 
 const router = Router()
@@ -77,8 +77,9 @@ function buildPublicUser(user: {
 }
 
 function getFrontendUrl(): string {
+  const configured = (process.env.FRONTEND_URL ?? '').trim().replace(/[`"' ]/g, '')
   return (
-    process.env.FRONTEND_URL?.trim() ||
+    configured ||
     (process.env.NODE_ENV === 'production'
       ? 'https://primecompetiive.netlify.app'
       : 'http://localhost:5173')
@@ -94,20 +95,6 @@ function getDiscordConfig() {
     clientId,
     clientSecret,
     redirectUri,
-  }
-}
-
-function cookieOpts(req: Request) {
-  const secure =
-    req.secure ||
-    (req.headers['x-forwarded-proto'] === 'https' && req.headers.host != null) ||
-    process.env.NODE_ENV === 'production'
-
-  return {
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    secure,
-    path: '/',
   }
 }
 
@@ -158,7 +145,7 @@ router.get('/discord/url', async (req: Request, res: Response): Promise<void> =>
   }
 
   const state = randomToken(24)
-  res.cookie(DISCORD_STATE_COOKIE, state, { ...cookieOpts(req), maxAge: 1000 * 60 * 10 })
+  res.cookie(DISCORD_STATE_COOKIE, state, { ...getDefaultCookieOptions(req), maxAge: 1000 * 60 * 10 })
 
   const url = new URL('https://discord.com/oauth2/authorize')
   url.searchParams.set('client_id', config.clientId)
@@ -194,7 +181,7 @@ router.post('/discord/exchange', async (req: Request, res: Response): Promise<vo
     return
   }
 
-  res.clearCookie(DISCORD_STATE_COOKIE, cookieOpts(req))
+  res.clearCookie(DISCORD_STATE_COOKIE, getDefaultCookieOptions(req))
 
   const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
     method: 'POST',

@@ -9,6 +9,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "check": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "server:start": "tsx api/server.ts",
+    "railway:build": "npm run prisma:generate && npm run build",
+    "railway:start": "npm run db:push && npm run server:start",
     "server:dev": "nodemon",
     "dev": "concurrently \"npm run client:dev\" \"npm run server:dev\""
   },

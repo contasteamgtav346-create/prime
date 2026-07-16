@@ -9,7 +9,7 @@ export function getCsrfCookieName(): string {
 }
 
 function normalizeOrigin(value: string | undefined): string {
-  const raw = (value ?? '').trim()
+  const raw = (value ?? '').trim().replace(/[`"' ]/g, '')
   if (!raw) return ''
 
   try {
